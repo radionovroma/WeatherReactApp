@@ -1,0 +1,20 @@
+.dropdown{
+    width: 140px;
+    height: 30px;
+    padding: 0 10px;
+    border: none;
+    border-radius: 7px;
+    background-color: #ccc;
+    line-height: 30px;
+    font-family: "Times New Roman", serif;
+    font-size: 20px;
+    color: #444;
+    cursor: pointer;
+}
+.dropdown:focus-visible{
+    outline: none;
+}
+
+.dropdown > option {
+    cursor: pointer;
+}
