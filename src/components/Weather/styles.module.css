@@ -6,6 +6,13 @@
     color: #444;
 }
 
+.row{
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 10px;
+}
+
 .cityName{
     font-weight: bold;
 }
@@ -22,13 +29,6 @@
     padding-left: 20px;
     text-align: start;
     font-size: 36px;
-}
-
-.weatherProp{
-    display: flex;
-    align-items: center;
-    gap: 20px;
-    margin-bottom: 10px;
 }
 
 

@@ -5,7 +5,7 @@ export type TWeather = {
   }[]
   main: {
     temp: number;
-    ['feels_like']: number;
+    feels_like: number;
     pressure: number;
     humidity: number;
   }

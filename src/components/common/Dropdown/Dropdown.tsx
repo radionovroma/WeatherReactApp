@@ -1,16 +1,19 @@
 import { FC, ChangeEvent} from 'react';
 import { Units } from "../../types/types";
 import css from './styles.module.css'
-interface ButtonProps {
+
+interface DropdownProps {
+  value: Units;
+  units: {value: Units, label: string}[];
   onChange: (e: ChangeEvent<{ value: Units} & HTMLSelectElement >) => void;
 }
 
-export const Dropdown: FC<ButtonProps> = ({ onChange}) => {
+export const Dropdown: FC<DropdownProps> = ({ value, units, onChange }) => {
   return (
-    <select className={ css.dropdown } onChange={ onChange }>
-      <option value="metric">Metric, °C</option>
-      <option value="imperial">Imperial, °F</option>
-      <option value="standard">Standard, K</option>
+    <select className={ css.dropdown } value={ value } onChange={ onChange }>
+      { units.map((unit) => {
+        return <option key={unit.value} value={unit.value}>{unit.label}</option>
+      })}
     </select>
   );
 }
