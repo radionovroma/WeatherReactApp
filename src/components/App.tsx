@@ -1,6 +1,6 @@
 import { Component, Fragment } from 'react';
 import debounce from 'lodash/debounce';
-import { Input, Dropdown } from "./common";
+import { Input, Dropdown, ErrorBoundary } from "./common";
 import { Weather } from "./Weather";
 import { TWeather, Units } from "./types/types";
 import css from './styles.module.css';
@@ -138,14 +138,16 @@ export class App extends Component<{}, AppState> {
             { (this.state.weatherLoadStatus === LOAD_STATUSES.LOADING || this.state.weatherLoadStatus === LOAD_STATUSES.INITIAL) &&
               <div className={css.ldsRing}><div></div></div>
             }
-            { this.state.weatherLoadStatus === LOAD_STATUSES.LOADED &&
-              this.state.weatherInfo !== null &&
-              <Weather
-                weatherInfo={this.state.weatherInfo}
-                unit={ this.state.unit }
-                units={ this.state.units }
-              />
-            }
+            <ErrorBoundary fallback={ <p className={ css.error }>Something went wrong</p> }>
+              { this.state.weatherLoadStatus === LOAD_STATUSES.LOADED &&
+                this.state.weatherInfo !== null &&
+                <Weather
+                  weatherInfo={this.state.weatherInfo}
+                  unit={ this.state.unit }
+                  units={ this.state.units }
+                />
+              }
+            </ErrorBoundary>
           </div>
         </main>
       </Fragment>
