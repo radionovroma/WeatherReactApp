@@ -1,9 +1,9 @@
 import { FC } from 'react';
-import { TWeather, Units} from "../types/types";
+import { TWeather, Units} from "../../types/types";
 import css from './styles.module.css';
 
 interface WeatherProps {
-  weatherInfo: TWeather;
+  weatherInfo: NonNullable<TWeather['info']>;
   unit: Units;
   units: { value: Units, label: string, mark: string }[]
 }

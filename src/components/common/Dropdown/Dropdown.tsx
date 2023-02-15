@@ -1,10 +1,10 @@
 import { FC, ChangeEvent} from 'react';
-import { Units } from "../../types/types";
+import { Units } from "../../../types/types";
 import css from './styles.module.css'
 
 interface DropdownProps {
   value: Units;
-  units: {value: Units, label: string}[];
+  units: {value: Units, label: string, mark: string}[];
   onChange: (e: ChangeEvent<{ value: Units} & HTMLSelectElement >) => void;
 }
 
