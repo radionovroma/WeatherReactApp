@@ -1,16 +1,10 @@
-import { FC, Fragment, useCallback, useEffect, useMemo, useState } from 'react';
+import { FC, Fragment, useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import debounce from 'lodash/debounce';
 import { Dropdown, Input } from './common';
 import { Weather } from './Weather';
-import { getWeatherError, getWeatherLoadStatus, getWeatherStart, getWeatherSuccess } from '../store/weather';
-import {
-  getCity,
-  getLocationError,
-  getLocationLoadStatus,
-  getLocationStart,
-  getLocationSuccess
-} from '../store/location';
+import { getWeatherLoadStatus, getWeatherStart, fetchWeather } from '../store/weather';
+import { getCity, getLocationLoadStatus, fetchLocation } from '../store/location';
 import { getUserAuth, getUserName, inputName, login } from "../store/user";
 import { Units } from '../types/units';
 import { LOAD_STATUSES } from '../types/loadStatuses';
@@ -33,59 +27,22 @@ export const App: FC = () => {
     { value: 'standard', label: 'Standard, K', mark: 'K' },
   ];
 
-  const fetchData = (url: string) => {
-    return fetch( url )
-      .then( data => {
-        if (data.ok) {
-          return data.json();
-        } else {
-          throw new Error( 'Network err' );
-        }
-      } );
-  };
-
-  const getWeatherData = useCallback( (cityInput: string, unit: Units) => {
-    let citySearch = cityInput ? cityInput : city;
-    let urlParams = new URLSearchParams( {
-      q: citySearch,
-      appid: `${ process.env.REACT_APP_APPID }`,
-      units: unit
-    } ).toString();
-    fetchData( `https://api.openweathermap.org/data/2.5/weather?${ urlParams }` )
-      .then( weather => {
-        dispatch( getWeatherSuccess( weather ) );
-      } )
-      .catch( () => {
-        dispatch( getWeatherError() );
-      } )
-
-  }, [ city, dispatch ] );
-
   const debouncedSearch = useMemo(
     () => debounce( (city: string, unit: Units) => {
-      getWeatherData( city, unit )
+      dispatch( fetchWeather( city, unit ) as any );
     }, 1500 ),
-    [ getWeatherData ] );
+    [ dispatch ] );
 
   const debouncedNameInput = useMemo(
-    () => debounce( (name: string) => dispatch( inputName( name ) ), 1500 ),
+    () => debounce( (name: string) => dispatch( inputName( name ) ), 1000 ),
     [ dispatch ]
   )
 
   useEffect( () => {
     if (locationLoadStatus === LOAD_STATUSES.UNKNOWN && isUserAuth) {
-      dispatch( getLocationStart() );
-      fetchData( 'http://ip-api.com/json/' )
-        .then( (location) => {
-          dispatch( getLocationSuccess( location.city ) );
-          dispatch( getWeatherStart() );
-          getWeatherData( location.city, unit );
-        } )
-        .catch( () => {
-          dispatch( getLocationError() );
-        } );
+      dispatch( fetchLocation( unit ) as any );
     }
-  }, [ dispatch, getWeatherData, isUserAuth, locationLoadStatus, unit ] );
+  }, [ dispatch, isUserAuth, locationLoadStatus, unit ] );
 
   useEffect( () => {
     if (locationLoadStatus !== LOAD_STATUSES.UNKNOWN) {
@@ -95,16 +52,15 @@ export const App: FC = () => {
       debouncedSearch( newCityInput || city, unit );
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ debouncedSearch, newCityInput ] );
-
+  }, [ debouncedSearch, dispatch, newCityInput ] );
 
   useEffect( () => {
     if (locationLoadStatus !== LOAD_STATUSES.UNKNOWN) {
       dispatch( getWeatherStart() );
-      getWeatherData( newCityInput || city, unit );
+      dispatch( fetchWeather( newCityInput || city, unit ) as any );
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ getWeatherData, unit ] );
+  }, [ dispatch, unit ] );
 
   return (
     <Fragment>

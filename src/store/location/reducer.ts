@@ -2,7 +2,7 @@ import {LOAD_STATUSES} from '../../types/loadStatuses';
 import {Action, ACTION_TYPES, Store} from "./types";
 
 const initialStore: Store = {
-  city: 'Minsk',
+  city: 'Moscow',
   loadStatus: LOAD_STATUSES.UNKNOWN
 }
 
