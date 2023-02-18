@@ -1,5 +1,5 @@
 import { FC, ChangeEvent} from 'react';
-import { Units } from "../../../types/types";
+import { Units } from "../../../types/units";
 import css from './styles.module.css'
 
 interface DropdownProps {

@@ -1,9 +1,42 @@
-.headerBlock{
+.headerBlock {
     width: 100%;
     background-color: #aaa;
 }
 
-.container{
+.message {
+    box-sizing: border-box;
+    margin: 0 auto;
+    width: 750px;
+    padding: 0 25px 10px;
+    font-family: "Times New Roman", serif;
+    font-size: 18px;
+    color: #444;
+}
+
+.login {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 30px;
+}
+
+.loginInput {
+    width: 200px;
+    font-family: "Times New Roman", serif;
+    font-size: 18px;
+    color: #444;
+}
+
+.loginBtn {
+    width: 208px;
+    font-family: "Times New Roman", serif;
+    font-size: 18px;
+    color: #444;
+}
+
+.container {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -12,13 +45,13 @@
     margin: 0 auto;
 }
 
-.containerWeather{
+.containerWeather {
     width: 720px;
     height: 100%;
     margin: 0 auto;
 }
 
-.info{
+.info {
     display: flex;
     justify-content: space-around;
     align-items: center;
@@ -28,7 +61,7 @@
     border-radius: 10px;
 }
 
-.city{
+.city {
     flex: 1;
     margin: 0 20px 0 0;
     line-height: 20px;
@@ -37,7 +70,7 @@
     color: #444;
 }
 
-.error{
+.error {
     font-family: "Times New Roman", serif;
     font-size: 20px;
     color: #000;
@@ -50,6 +83,7 @@
     height: 80px;
     margin: 200px auto;
 }
+
 .ldsRing div {
     box-sizing: border-box;
     display: block;
@@ -62,15 +96,19 @@
     animation: lds-ring 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
     border-color: #aaa transparent transparent transparent;
 }
+
 .ldsRing div:nth-child(1) {
     animation-delay: -0.45s;
 }
+
 .ldsRing div:nth-child(2) {
     animation-delay: -0.3s;
 }
+
 .ldsRing div:nth-child(3) {
     animation-delay: -0.15s;
 }
+
 @keyframes lds-ring {
     0% {
         transform: rotate(0deg);

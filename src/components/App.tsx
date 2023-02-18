@@ -1,98 +1,110 @@
-import { FC, Fragment, useState, useEffect, useCallback, useMemo} from 'react';
+import { FC, Fragment, useCallback, useEffect, useMemo, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import debounce from 'lodash/debounce';
-import { Input, Dropdown } from "./common";
-import { Weather } from "./Weather";
-import { TWeather, Units } from "../types/types";
+import { Dropdown, Input } from './common';
+import { Weather } from './Weather';
+import { getWeatherError, getWeatherLoadStatus, getWeatherStart, getWeatherSuccess } from '../store/weather';
+import {
+  getCity,
+  getLocationError,
+  getLocationLoadStatus,
+  getLocationStart,
+  getLocationSuccess
+} from '../store/location';
+import { getUserAuth, getUserName, inputName, login } from "../store/user";
+import { Units } from '../types/units';
+import { LOAD_STATUSES } from '../types/loadStatuses';
 import css from './styles.module.css';
 
-enum LOAD_STATUSES {
-  LOADED = 'loaded',
-  LOADING = 'loading',
-  ERROR = 'error',
-  INITIAL = 'initial',
-}
-
 export const App: FC = () => {
-  const [city, setCity] = useState('');
-  const [newCityInput, setNewCityInput] = useState('');
-  const [unit, setUnit] = useState<Units>('metric');
-  const [loadStatus, setLoadStatus] = useState({location: LOAD_STATUSES.INITIAL, weather: LOAD_STATUSES.INITIAL});
-  const [weather, setWeather] = useState<TWeather>({info: null, errorCod: null});
+  const [ newCityInput, setNewCityInput ] = useState( '' );
+  const [ unit, setUnit ] = useState<Units>( 'metric' );
 
-  const localStorageKey = 'city';
-  const units: {value: Units, label: string, mark: string}[] =[
-    { value: 'metric', label: 'Metric, °C', mark: '°C'},
-    { value: 'imperial', label: 'Imperial, °F', mark: '°F'},
-    { value: 'standard', label: 'Standard, K', mark: 'K'},
+  const city = useSelector( getCity );
+  const userName = useSelector( getUserName );
+  const isUserAuth = useSelector( getUserAuth );
+  const locationLoadStatus = useSelector( getLocationLoadStatus );
+  const weatherLoadStatus = useSelector( getWeatherLoadStatus );
+  const dispatch = useDispatch();
+
+  const units: { value: Units, label: string, mark: string }[] = [
+    { value: 'metric', label: 'Metric, °C', mark: '°C' },
+    { value: 'imperial', label: 'Imperial, °F', mark: '°F' },
+    { value: 'standard', label: 'Standard, K', mark: 'K' },
   ];
 
-  const fetchData = (url: string, request: 'weather' | 'location') => {
-    return fetch(url)
-      .then(data => {
+  const fetchData = (url: string) => {
+    return fetch( url )
+      .then( data => {
         if (data.ok) {
-         return data.json();
+          return data.json();
         } else {
-         if ( request === 'weather') {
-           setWeather((prevWeather) => ({...prevWeather, errorCod: data.status}));
-         }
-         throw new Error('Network err');
+          throw new Error( 'Network err' );
         }
-      });
+      } );
   };
 
-  const getWeatherData = useCallback((cityInput: string, unit: Units) => {
+  const getWeatherData = useCallback( (cityInput: string, unit: Units) => {
     let citySearch = cityInput ? cityInput : city;
-    let urlParams = new URLSearchParams({ q: citySearch, appid: `${process.env.REACT_APP_APPID}`, units: unit }).toString();
-    fetchData(`https://api.openweathermap.org/data/2.5/weather?${urlParams}`, 'weather')
-      .then(info => {
-        setWeather((prevWeather) => ({...prevWeather, info}));
-        setLoadStatus((prevStatus) => ({...prevStatus, weather: LOAD_STATUSES.LOADED}));
-      })
-      .catch(() => {
-        setWeather((prevWeather) => ({ ...prevWeather, info: null }));
-        setLoadStatus((prevStatus) => ({...prevStatus, weather: LOAD_STATUSES.ERROR}));
-      })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    let urlParams = new URLSearchParams( {
+      q: citySearch,
+      appid: `${ process.env.REACT_APP_APPID }`,
+      units: unit
+    } ).toString();
+    fetchData( `https://api.openweathermap.org/data/2.5/weather?${ urlParams }` )
+      .then( weather => {
+        dispatch( getWeatherSuccess( weather ) );
+      } )
+      .catch( () => {
+        dispatch( getWeatherError() );
+      } )
+
+  }, [ city, dispatch ] );
 
   const debouncedSearch = useMemo(
-    () => debounce((city: string, unit: Units) => { getWeatherData(city, unit) }, 1500), [getWeatherData]
+    () => debounce( (city: string, unit: Units) => {
+      getWeatherData( city, unit )
+    }, 1500 ),
+    [ getWeatherData ] );
+
+  const debouncedNameInput = useMemo(
+    () => debounce( (name: string) => dispatch( inputName( name ) ), 1500 ),
+    [ dispatch ]
   )
 
-  useEffect(() => {
-    if (!city && loadStatus.location === LOAD_STATUSES.INITIAL) {
-      fetchData('http://ip-api.com/json/', 'location')
-        .then((location) => {
-          setCity(location.city);
-          setLoadStatus((prevStatus) => ({...prevStatus, location: LOAD_STATUSES.LOADED}));
-          localStorage.setItem(localStorageKey, location.city);
-          getWeatherData(location.city, unit);
-        })
-        .catch(() => {
-          setCity('Minsk');
-          setLoadStatus((prevStatus) => ({...prevStatus, location: LOAD_STATUSES.ERROR}));
-        });
+  useEffect( () => {
+    if (locationLoadStatus === LOAD_STATUSES.UNKNOWN && isUserAuth) {
+      dispatch( getLocationStart() );
+      fetchData( 'http://ip-api.com/json/' )
+        .then( (location) => {
+          dispatch( getLocationSuccess( location.city ) );
+          dispatch( getWeatherStart() );
+          getWeatherData( location.city, unit );
+        } )
+        .catch( () => {
+          dispatch( getLocationError() );
+        } );
+    }
+  }, [ dispatch, getWeatherData, isUserAuth, locationLoadStatus, unit ] );
+
+  useEffect( () => {
+    if (locationLoadStatus !== LOAD_STATUSES.UNKNOWN) {
+      if (weatherLoadStatus !== LOAD_STATUSES.LOADING) {
+        dispatch( getWeatherStart() );
+      }
+      debouncedSearch( newCityInput || city, unit );
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+  }, [ debouncedSearch, newCityInput ] );
 
-  useEffect(() => {
-    if (loadStatus.location !== LOAD_STATUSES.INITIAL) {
-      setLoadStatus((prevStatus) => ({ ...prevStatus, weather: LOAD_STATUSES.LOADING}));
-      setWeather((prevWeather) => ({ ...prevWeather, errorCod: null}));
-      debouncedSearch(newCityInput || city, unit);
+
+  useEffect( () => {
+    if (locationLoadStatus !== LOAD_STATUSES.UNKNOWN) {
+      dispatch( getWeatherStart() );
+      getWeatherData( newCityInput || city, unit );
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [debouncedSearch, newCityInput]);
-
-
-  useEffect(() => {
-    if (loadStatus.location !== LOAD_STATUSES.INITIAL) {
-      setLoadStatus((prevStatus) => ({ ...prevStatus, weather: LOAD_STATUSES.LOADING}));
-      getWeatherData(newCityInput || city, unit);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [getWeatherData, unit]);
+  }, [ getWeatherData, unit ] );
 
   return (
     <Fragment>
@@ -101,44 +113,61 @@ export const App: FC = () => {
           <Input
             placeholder='Weather in city'
             value={ newCityInput }
-            onChange={ (e) => setNewCityInput(e.target.value.trim())}
+            onChange={ (e) => setNewCityInput( e.target.value.trim() ) }
           />
           <div className={ css.info }>
             <svg width="16" height="20" viewBox="0 0 16 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M8 0C3.6 0 0 3.6 0 8C0 13.4 7 19.5 7.3 19.8C7.5 19.9 7.8 20 8 20C8.2 20 8.5 19.9 8.7 19.8C9 19.5 16 13.4 16 8C16 3.6 12.4 0 8 0ZM8 17.7C5.9 15.7 2 11.4 2 8C2 4.7 4.7 2 8 2C11.3 2 14 4.7 14 8C14 11.3 10.1 15.7 8 17.7ZM8 4C5.8 4 4 5.8 4 8C4 10.2 5.8 12 8 12C10.2 12 12 10.2 12 8C12 5.8 10.2 4 8 4ZM8 10C6.9 10 6 9.1 6 8C6 6.9 6.9 6 8 6C9.1 6 10 6.9 10 8C10 9.1 9.1 10 8 10Z" fill="#444"/>
+              <path
+                d="M8 0C3.6 0 0 3.6 0 8C0 13.4 7 19.5 7.3 19.8C7.5 19.9 7.8 20 8 20C8.2 20 8.5 19.9 8.7 19.8C9 19.5 16 13.4 16 8C16 3.6 12.4 0 8 0ZM8 17.7C5.9 15.7 2 11.4 2 8C2 4.7 4.7 2 8 2C11.3 2 14 4.7 14 8C14 11.3 10.1 15.7 8 17.7ZM8 4C5.8 4 4 5.8 4 8C4 10.2 5.8 12 8 12C10.2 12 12 10.2 12 8C12 5.8 10.2 4 8 4ZM8 10C6.9 10 6 9.1 6 8C6 6.9 6.9 6 8 6C9.1 6 10 6.9 10 8C10 9.1 9.1 10 8 10Z"
+                fill="#444"/>
             </svg>
-            <p className={css.city}>
-              { loadStatus.location === LOAD_STATUSES.LOADED ? city : 'Not found'  }
+            <p className={ css.city }>
+              { locationLoadStatus === LOAD_STATUSES.LOADED ? city : 'Not found' }
             </p>
             <Dropdown
-              value={unit}
-              units={units}
-              onChange={ (e) => setUnit(e.target.value)}
+              value={ unit }
+              units={ units }
+              onChange={ (e) => setUnit( e.target.value ) }
             />
           </div>
         </div>
+        { isUserAuth && <h3 className={ css.message }>Welcome, { userName }</h3> }
       </header>
       <main>
         <div className={ css.containerWeather }>
-          { loadStatus.weather === LOAD_STATUSES.ERROR &&
-            <p className={ css.error }>
-              {weather.errorCod === 404 ?
-                'The city you are looking for is not found - try changing the query' :
-                'An error has occurred, please try again later'}
-            </p>
-          }
-          { (loadStatus.weather === LOAD_STATUSES.LOADING || loadStatus.weather === LOAD_STATUSES.INITIAL) &&
-            <div className={css.ldsRing}>
-              <div></div>
-            </div>
-          }
-          { loadStatus.weather === LOAD_STATUSES.LOADED &&
-            weather.info !== null &&
-            <Weather
-              weatherInfo={weather.info}
-              unit={ unit }
-              units={ units }
-            />
+          {
+            !isUserAuth ?
+              <div className={ css.login }>
+                <input
+                  className={ css.loginInput }
+                  placeholder='Your name'
+                  onChange={ (e) => debouncedNameInput( e.target.value ) }/>
+                <button
+                  className={ css.loginBtn }
+                  onClick={ () => (userName && dispatch( login() )) }>
+                  Login
+                </button>
+              </div> :
+              <>
+                {
+                  weatherLoadStatus === LOAD_STATUSES.ERROR &&
+                  <p className={ css.error }>
+                    'An error has occurred, please try again later'
+                  </p>
+                }
+                {
+                  (weatherLoadStatus === LOAD_STATUSES.LOADING || weatherLoadStatus === LOAD_STATUSES.UNKNOWN) &&
+                  <div className={ css.ldsRing }>
+                    <div></div>
+                  </div>
+                }
+                {
+                  weatherLoadStatus === LOAD_STATUSES.LOADED &&
+                  <Weather
+                    unit={ unit }
+                    units={ units }/>
+                }
+              </>
           }
         </div>
       </main>
