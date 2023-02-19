@@ -1,3 +1,2 @@
-export { reducer } from './reducer';
+export { slice, fetchLocation } from './slice';
 export * from './selectors';
-export * from './actionCreators';

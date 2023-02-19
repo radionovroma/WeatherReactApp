@@ -1,10 +1,10 @@
-import { Store } from './types';
-import { RootStore } from '../rootStore';
+import { State } from './slice';
+import { RootState } from '../rootStore';
 
-const getLocationSlice = (store: RootStore): Store => store.location;
+const getLocationSlice = (store: RootState): State => store.location;
 
-export const getCity = (store: RootStore): Store['city'] =>
-  getLocationSlice(store).city;
+export const getCity = (store: RootState): State['city'] =>
+  getLocationSlice( store ).city;
 
-export const getLocationLoadStatus = (store: RootStore): Store['loadStatus'] =>
-  getLocationSlice(store).loadStatus;
+export const getLocationLoadStatus = (store: RootState): State['loadStatus'] =>
+  getLocationSlice( store ).loadStatus;

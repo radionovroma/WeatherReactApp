@@ -1,10 +1,10 @@
-import { Store } from './types';
-import { RootStore } from '../rootStore';
+import { State } from './slice';
+import { RootState } from '../rootStore';
 
-const getWeatherSlice = (store: RootStore): Store => store.weather;
+const getWeatherSlice = (store: RootState): State => store.weather;
 
-export const getWeather = (store: RootStore): Store['weatherInfo'] =>
-  getWeatherSlice(store).weatherInfo;
+export const getWeather = (store: RootState): State['weatherInfo'] =>
+  getWeatherSlice( store ).weatherInfo;
 
-export const getWeatherLoadStatus = (store: RootStore): Store['loadStatus'] =>
-  getWeatherSlice(store).loadStatus;
+export const getWeatherLoadStatus = (store: RootState): State['loadStatus'] =>
+  getWeatherSlice( store ).loadStatus;

@@ -1,10 +1,10 @@
-import { Store } from './types';
-import { RootStore } from '../rootStore';
+import { State } from './slice';
+import { RootState } from '../rootStore';
 
-const getUserSlice = (store: RootStore): Store => store.user;
+const getUserSlice = (store: RootState): State => store.user;
 
-export const getUserAuth = (store: RootStore): Store['isAuth'] =>
-  getUserSlice(store).isAuth;
+export const getUserAuth = (store: RootState): State['isAuth'] =>
+  getUserSlice( store ).isAuth;
 
-export const getUserName = (store: RootStore): Store['name'] =>
-  getUserSlice(store).name;
+export const getUserName = (store: RootState): State['name'] =>
+  getUserSlice( store ).name;

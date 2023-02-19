@@ -3,9 +3,9 @@ import { useDispatch, useSelector } from 'react-redux';
 import debounce from 'lodash/debounce';
 import { Dropdown, Input } from './common';
 import { Weather } from './Weather';
-import { getWeatherLoadStatus, getWeatherStart, fetchWeather } from '../store/weather';
+import { getWeatherLoadStatus, actions as weatherActions } from '../store/weather';
 import { getCity, getLocationLoadStatus, fetchLocation } from '../store/location';
-import { getUserAuth, getUserName, inputName, login } from "../store/user";
+import { getUserAuth, getUserName, actions as userActions } from "../store/user";
 import { Units } from '../types/units';
 import { LOAD_STATUSES } from '../types/loadStatuses';
 import css from './styles.module.css';
@@ -29,12 +29,14 @@ export const App: FC = () => {
 
   const debouncedSearch = useMemo(
     () => debounce( (city: string, unit: Units) => {
-      dispatch( fetchWeather( city, unit ) as any );
+      dispatch( weatherActions.fetchWeather( { city, unit } ) as any );
     }, 1500 ),
     [ dispatch ] );
 
   const debouncedNameInput = useMemo(
-    () => debounce( (name: string) => dispatch( inputName( name ) ), 1000 ),
+    () => debounce( (name: string) => {
+      dispatch( userActions.inputName( name ) );
+    }, 1000 ),
     [ dispatch ]
   )
 
@@ -47,7 +49,7 @@ export const App: FC = () => {
   useEffect( () => {
     if (locationLoadStatus !== LOAD_STATUSES.UNKNOWN) {
       if (weatherLoadStatus !== LOAD_STATUSES.LOADING) {
-        dispatch( getWeatherStart() );
+        dispatch( weatherActions.start() );
       }
       debouncedSearch( newCityInput || city, unit );
     }
@@ -56,8 +58,8 @@ export const App: FC = () => {
 
   useEffect( () => {
     if (locationLoadStatus !== LOAD_STATUSES.UNKNOWN) {
-      dispatch( getWeatherStart() );
-      dispatch( fetchWeather( newCityInput || city, unit ) as any );
+      dispatch( weatherActions.start() );
+      dispatch( weatherActions.fetchWeather( { city: newCityInput || city, unit } ) as any );
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ dispatch, unit ] );
@@ -100,7 +102,7 @@ export const App: FC = () => {
                   onChange={ (e) => debouncedNameInput( e.target.value ) }/>
                 <button
                   className={ css.loginBtn }
-                  onClick={ () => (userName && dispatch( login() )) }>
+                  onClick={ () => (userName && dispatch( userActions.login() )) }>
                   Login
                 </button>
               </div> :

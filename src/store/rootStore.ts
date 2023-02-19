@@ -1,19 +1,19 @@
-import { createStore, combineReducers, applyMiddleware} from 'redux';
+import { createStore, combineReducers, applyMiddleware } from 'redux';
 import { composeWithDevTools } from "@redux-devtools/extension";
 import Thunk from 'redux-thunk';
-import { reducer as userReducer } from './user';
-import { reducer as weatherReducer } from './weather';
-import { reducer as locationReducer } from './location';
+import { slice as userReducer } from './user';
+import { slice as weatherReducer } from './weather';
+import { slice as locationReducer } from './location';
 
-const rootReducer = combineReducers({
+const rootReducer = combineReducers( {
   user: userReducer,
   weather: weatherReducer,
   location: locationReducer,
-});
+} );
 
 export const store = createStore(
   rootReducer,
-  composeWithDevTools(applyMiddleware(Thunk))
+  composeWithDevTools( applyMiddleware( Thunk ) )
 );
 
-export type RootStore = ReturnType<typeof store.getState>;
+export type RootState = ReturnType<typeof store.getState>;

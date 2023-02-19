@@ -28,7 +28,7 @@ export const getWeather = (q: string, units: string): Promise<WeatherInfo> => {
   return fetchData(url);
 };
 
-export const getLocation = (): Promise<{ city: string}> => {
+export const getLocation = (): Promise<{ city: string }> => {
   return fetchData(LOCATION_URL);
 };
 
